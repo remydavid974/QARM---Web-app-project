@@ -13,51 +13,50 @@ tab1, tab2 = st.tabs(["Tab 1", "Tab 2"])
 
 with tab1:
    # Example: Reading the data
-    df = pd.read_csv('cumulative_returns.csv', index_col='date')
-    vw_returns = pd.read_csv('vw_cumreturns.csv', index_col='date')
-    sp500_returns = pd.read_csv('sp500data.csv', index_col='Date')
-    sp500_returns = sp500_returns['Daily_Returns']
-    sp500_returns = (1 + sp500_returns).cumprod()
-    vw_returns.index = pd.to_datetime(vw_returns.index, errors='coerce')
-    sp500_returns.index = pd.to_datetime(sp500_returns.index, errors='coerce')
-    # Streamlit UI for parameters
-    options_tc = [0.0, 0.01]
-    options_constraint_weight = ['constraint_no_min', 'constraint_min_1percent', 'constraint_min_2percent', 'constraint_min_3percent', 'constraint_short_sell_ok']
+   df = pd.read_csv('cumulative_returns.csv', index_col='date')
+   vw_returns = pd.read_csv('vw_cumreturns.csv', index_col='date')
+   sp500_returns = pd.read_csv('sp500data.csv', index_col='Date')
+   sp500_returns = sp500_returns['Daily_Returns']
+   sp500_returns = (1 + sp500_returns).cumprod()
+   vw_returns.index = pd.to_datetime(vw_returns.index, errors='coerce')
+   sp500_returns.index = pd.to_datetime(sp500_returns.index, errors='coerce')
+   # Streamlit UI for parameters
+   options_tc = [0.0, 0.01]
+   options_constraint_weight = ['constraint_no_min', 'constraint_min_1percent', 'constraint_min_2percent', 'constraint_min_3percent', 'constraint_short_sell_ok']
 
-    phi_tab1 = st.slider("Choose a phi value", min_value=1, max_value=10, step=1, key='phi_tab1')
-    omega_tab1 = st.slider("Choose an omega", min_value=0.0, max_value=0.5, step=0.1, key='omega_tab1')
-    tc = st.selectbox("Transaction cost", options_tc)
-    constraint_weight = st.selectbox("Choose a constraint", options_constraint_weight)
+   phi_tab1 = st.slider("Choose a phi value", min_value=1, max_value=10, step=1, key='phi_tab1')
+   omega_tab1 = st.slider("Choose an omega", min_value=0.0, max_value=0.5, step=0.1, key='omega_tab1')
+   tc = st.selectbox("Transaction cost", options_tc)
+   constraint_weight = st.selectbox("Choose a constraint", options_constraint_weight)
 
    # Ensure the "Value Weighted" column matches the selected transaction cost
-    selected_tc_column = f"{tc}"  # Use the selected transaction cost
-    if selected_tc_column in vw_returns.columns:
-        vw_returns_selected = vw_returns[selected_tc_column]
-    else:
-        st.error(f"Transaction cost column '{selected_tc_column}' not found in vw_returns.")
-        vw_returns_selected = vw_returns.iloc[:, 0]  # Default to the first column
-    # Convert indices to datetime if not already done
-    vw_returns_selected.index = pd.to_datetime(vw_returns_selected.index, errors='coerce')
-    vw_returns_selected = vw_returns_selected.dropna()
+   selected_tc_column = f"{tc}"  # Use the selected transaction cost
+   if selected_tc_column in vw_returns.columns:
+      vw_returns_selected = vw_returns[selected_tc_column]
+   else:
+      st.error(f"Transaction cost column '{selected_tc_column}' not found in vw_returns.")        vw_returns_selected = vw_returns.iloc[:, 0]  # Default to the first column
+      # Convert indices to datetime if not already done
+      vw_returns_selected.index = pd.to_datetime(vw_returns_selected.index, errors='coerce')
+      vw_returns_selected = vw_returns_selected.dropna()
 
 
-    # Dynamically ensure that the Current Series and VW Returns have the same transaction cost
-    current_serie_column = f"phi_{phi_tab1}_tc_{tc}_omega_{omega_tab1}_{constraint_weight}"
-    if current_serie_column in df.columns:
-        current_serie = df[current_serie_column]
-    else:
-        st.error(f"Column '{current_serie_column}' not found in current series data.")
-        current_serie = df.iloc[:, 0]  # Default to the first column
+      # Dynamically ensure that the Current Series and VW Returns have the same transaction cost
+      current_serie_column = f"phi_{phi_tab1}_tc_{tc}_omega_{omega_tab1}_{constraint_weight}"
+   if current_serie_column in df.columns:
+      current_serie = df[current_serie_column]
+   else:
+      st.error(f"Column '{current_serie_column}' not found in current series data.")
+      current_serie = df.iloc[:, 0]  # Default to the first column
 
-    # Select the current series based on user input
-    current_serie = df[f"phi_{phi_tab1}_tc_{tc}_omega_{omega_tab1}_{constraint_weight}"]
-    current_serie.index = pd.to_datetime(current_serie.index, errors='coerce')
-    current_serie = current_serie.dropna()
-    start_date = datetime.datetime(2018, 1, 1)  # Fixed start date
-    end_date = datetime.datetime(2020, 3, 31)  # Fixed end date
+   # Select the current series based on user input
+   current_serie = df[f"phi_{phi_tab1}_tc_{tc}_omega_{omega_tab1}_{constraint_weight}"]
+   current_serie.index = pd.to_datetime(current_serie.index, errors='coerce')
+   current_serie = current_serie.dropna()
+   start_date = datetime.datetime(2018, 1, 1)  # Fixed start date
+   end_date = datetime.datetime(2020, 3, 31)  # Fixed end date
 
-    if st.button("Generate Graph and Metrics"):
-        fig, ax = plt.subplots(figsize=(10, 6))
+   if st.button("Generate Graph and Metrics"):
+      fig, ax = plt.subplots(figsize=(10, 6))
 
       # Plot Current Series and Selected VW Returns
       ax.plot(current_serie.index, current_serie, color='blue', label="Black-Litterman")
@@ -87,37 +86,37 @@ with tab1:
       st.pyplot(fig, clear_figure=True)
 
 
-        # Calculate metrics
-        daily_returns = current_serie.pct_change().dropna()
+      # Calculate metrics
+      daily_returns = current_serie.pct_change().dropna()
 
-        # Geometric mean daily return
-        geometric_mean_daily_return = (np.prod(1 + daily_returns) ** (1 / len(daily_returns))) - 1
+      # Geometric mean daily return
+      geometric_mean_daily_return = (np.prod(1 + daily_returns) ** (1 / len(daily_returns))) - 1
 
-        # Standard deviation of daily returns
-        std_daily_return = daily_returns.std()
+      # Standard deviation of daily returns
+      std_daily_return = daily_returns.std()
 
-        # Risk-free rate
-        daily_risk_free_rate = 0.000055
+      # Risk-free rate
+      daily_risk_free_rate = 0.000055
 
-        # Sharpe ratio and annualized metrics
-        sharpe_ratio = (geometric_mean_daily_return - daily_risk_free_rate) / std_daily_return
-        annualized_sharpe_ratio = sharpe_ratio * np.sqrt(252)
+      # Sharpe ratio and annualized metrics
+      sharpe_ratio = (geometric_mean_daily_return - daily_risk_free_rate) / std_daily_return
+      annualized_sharpe_ratio = sharpe_ratio * np.sqrt(252)
 
-        # Annualized return
-        cumulative_return_end = current_serie.iloc[-1]
-        trading_days = len(current_serie)
-        years = trading_days / 252
-        annualized_return = (cumulative_return_end) ** (1 / years) - 1
+      # Annualized return
+      cumulative_return_end = current_serie.iloc[-1]
+      trading_days = len(current_serie)
+      years = trading_days / 252
+      annualized_return = (cumulative_return_end) ** (1 / years) - 1
 
-        # Annualized volatility
-        annualized_std = std_daily_return * np.sqrt(252)
+      # Annualized volatility
+      annualized_std = std_daily_return * np.sqrt(252)
 
-        # Display metrics
-        st.markdown("### Portfolio Performance Metrics")
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Annualized Return", f"{annualized_return:.2%}")
-        col2.metric("Annualized Volatility", f"{annualized_std:.2%}")
-        col3.metric("Annualized Sharpe Ratio", f"{annualized_sharpe_ratio:.2f}")
+      # Display metrics
+      st.markdown("### Portfolio Performance Metrics")
+      col1, col2, col3 = st.columns(3)
+      col1.metric("Annualized Return", f"{annualized_return:.2%}")
+      col2.metric("Annualized Volatility", f"{annualized_std:.2%}")
+      col3.metric("Annualized Sharpe Ratio", f"{annualized_sharpe_ratio:.2f}")
 
 with tab2:
 
