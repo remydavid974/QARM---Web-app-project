@@ -12,10 +12,9 @@ from scipy.optimize import LinearConstraint
 tab1, tab2 = st.tabs(["Tab 1", "Tab 2"])
 
 with tab1:
-    # Example: Reading the data
+   # Example: Reading the data
     df = pd.read_csv('cumulative_returns.csv', index_col='date')
-    vw_returns = pd.read_csv('vw_cumreturns.csv', index_col='date')
-    vw_returns = vw_returns.squeeze()
+    vw_returns = pd.read_csv('cum_ret_vw.csv', index_col='date')
     sp500_returns = pd.read_csv('sp500data.csv', index_col='Date')
     sp500_returns = sp500_returns['Daily_Returns']
     sp500_returns = (1 + sp500_returns).cumprod()
@@ -30,6 +29,26 @@ with tab1:
     tc = st.selectbox("Transaction cost", options_tc)
     constraint_weight = st.selectbox("Choose a constraint", options_constraint_weight)
 
+   # Ensure the "Value Weighted" column matches the selected transaction cost
+    selected_tc_column = f"{tc}"  # Use the selected transaction cost
+    if selected_tc_column in vw_returns.columns:
+        vw_returns_selected = vw_returns[selected_tc_column]
+    else:
+        st.error(f"Transaction cost column '{selected_tc_column}' not found in vw_returns.")
+        vw_returns_selected = vw_returns.iloc[:, 0]  # Default to the first column
+    # Convert indices to datetime if not already done
+    vw_returns_selected.index = pd.to_datetime(vw_returns_selected.index, errors='coerce')
+    vw_returns_selected = vw_returns_selected.dropna()
+
+
+    # Dynamically ensure that the Current Series and VW Returns have the same transaction cost
+    current_serie_column = f"phi_{phi_tab1}_tc_{tc}_omega_{omega_tab1}_{constraint_weight}"
+    if current_serie_column in df.columns:
+        current_serie = df[current_serie_column]
+    else:
+        st.error(f"Column '{current_serie_column}' not found in current series data.")
+        current_serie = df.iloc[:, 0]  # Default to the first column
+
     # Select the current series based on user input
     current_serie = df[f"phi_{phi_tab1}_tc_{tc}_omega_{omega_tab1}_{constraint_weight}"]
     current_serie.index = pd.to_datetime(current_serie.index, errors='coerce')
@@ -41,21 +60,16 @@ with tab1:
         # Prepare the figure
         fig, ax = plt.subplots(figsize=(10, 6))
 
-        # Plot the full graph
+         # Plot Current Series and Selected VW Returns
         ax.plot(current_serie.index, current_serie, color='blue', label="Black-Litterman")
-        ax.plot(vw_returns.index, vw_returns, color='green', label="Value weighted")
+        ax.plot(vw_returns_selected.index, vw_returns_selected, color='green', label=f"Value Weighted (tc={tc})")
         ax.plot(sp500_returns.index, sp500_returns, color='red', label="S&P500")
         ax.set_title("Cumulative Returns Over Time")
         ax.set_xlabel("Date")
         ax.set_ylabel("Cumulative Returns")
         ax.set_xlim(start_date, end_date)
-        y_min = 0.0  # Fixed minimum value
-        y_max = 2.0  # Fixed maximum value
-        ax.set_ylim(y_min, y_max)
-        ax.xaxis.set_major_locator(mdates.YearLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-        ax.tick_params(axis='x', rotation=45)
-        ax.legend()
+        y_min = min(current_serie.min().min(), vw_returns.min().min(), sp500_returns.min().min()) * 0.95
+        y_max = max(current_serie.max().max(), vw_returns.max().max(), sp500_returns.max().max()) * 1.05
 
         # Display the plot
         st.pyplot(fig)
