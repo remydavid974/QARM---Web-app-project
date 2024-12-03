@@ -14,7 +14,7 @@ tab1, tab2 = st.tabs(["Tab 1", "Tab 2"])
 with tab1:
    # Example: Reading the data
     df = pd.read_csv('cumulative_returns.csv', index_col='date')
-    vw_returns = pd.read_csv('cum_ret_vw.csv', index_col='date')
+    vw_returns = pd.read_csv('vw_cumreturns.csv', index_col='date')
     sp500_returns = pd.read_csv('sp500data.csv', index_col='Date')
     sp500_returns = sp500_returns['Daily_Returns']
     sp500_returns = (1 + sp500_returns).cumprod()
