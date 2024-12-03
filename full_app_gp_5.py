@@ -57,22 +57,35 @@ with tab1:
     end_date = datetime.datetime(2020, 3, 31)  # Fixed end date
 
     if st.button("Generate Graph and Metrics"):
-        # Prepare the figure
         fig, ax = plt.subplots(figsize=(10, 6))
 
-         # Plot Current Series and Selected VW Returns
-        ax.plot(current_serie.index, current_serie, color='blue', label="Black-Litterman")
-        ax.plot(vw_returns_selected.index, vw_returns_selected, color='green', label=f"Value Weighted (tc={tc})")
-        ax.plot(sp500_returns.index, sp500_returns, color='red', label="S&P500")
-        ax.set_title("Cumulative Returns Over Time")
-        ax.set_xlabel("Date")
-        ax.set_ylabel("Cumulative Returns")
-        ax.set_xlim(start_date, end_date)
-        y_min = min(current_serie.min().min(), vw_returns.min().min(), sp500_returns.min().min()) * 0.95
-        y_max = max(current_serie.max().max(), vw_returns.max().max(), sp500_returns.max().max()) * 1.05
+      # Plot Current Series and Selected VW Returns
+      ax.plot(current_serie.index, current_serie, color='blue', label="Black-Litterman")
+      ax.plot(vw_returns_selected.index, vw_returns_selected, color='green', label=f"Value Weighted (tc={tc})")
+      ax.plot(sp500_returns.index, sp500_returns, color='red', label="S&P500")
 
-        # Display the plot
-        st.pyplot(fig)
+      # Title and axis labels
+      ax.set_title("Cumulative Returns Over Time")
+      ax.set_xlabel("Date")
+      ax.set_ylabel("Cumulative Returns")
+
+      # X and Y limits
+      ax.set_xlim(start_date, end_date)
+      y_min = min(current_serie.min().min(), vw_returns_selected.min().min(), sp500_returns.min().min()) * 0.95
+      y_max = max(current_serie.max().max(), vw_returns_selected.max().max(), sp500_returns.max().max()) * 1.05
+      ax.set_ylim(y_min, y_max)
+
+      # Legend positioning
+      ax.legend(loc='upper left', bbox_to_anchor=(1, 1))  # Place legend outside the plot
+
+      # Format x-axis for dates
+      ax.xaxis.set_major_locator(mdates.YearLocator())
+      ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+      ax.tick_params(axis='x', rotation=45)
+
+      #Force Streamlit to render the plot correctly
+      st.pyplot(fig, clear_figure=True)
+
 
         # Calculate metrics
         daily_returns = current_serie.pct_change().dropna()
