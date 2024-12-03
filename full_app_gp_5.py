@@ -50,7 +50,7 @@ with tab1:
         ax.set_ylabel("Cumulative Returns")
         ax.set_xlim(start_date, end_date)
         y_min = 0.0  # Fixed minimum value
-        y_max = 4.0  # Fixed maximum value
+        y_max = 2.0  # Fixed maximum value
         ax.set_ylim(y_min, y_max)
         ax.xaxis.set_major_locator(mdates.YearLocator())
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
